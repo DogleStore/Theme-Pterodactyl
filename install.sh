@@ -1,10 +1,9 @@
 #!/bin/bash
 
 # ==========================================================
-# PTERODACTYL MODIFIER - THE ULTIMATUM (V13)
-# Version: 13.0.0 (Master Restoration & OP Theme)
-# Author: Senior DevOps & Full-Stack Developer
-# Fixes: TS2339, Sidebar Restore, IP Fix, Startup Fix
+# PTERODACTYL MODIFIER - THE OMEGA ARCHITECT (V14)
+# Version: 14.0.0 (Ultimate Stability & Hyper-Modern UI)
+# Fixes: ALL PREVIOUS ERRORS (IP n/a, Sidebar, Startup, TS)
 # ==========================================================
 
 set -e
@@ -17,20 +16,20 @@ COLOR_CYAN='\033[0;36m'
 NC='\033[0m'
 
 echo -e "${COLOR_PURPLE}============================================================${NC}"
-echo -e "${COLOR_CYAN}        DOGLE STORE: THE ULTIMATUM TRANSFORMATION           ${NC}"
+echo -e "${COLOR_CYAN}        DOGLE STORE: OMEGA ARCHITECT TRANSFORMATION         ${NC}"
 echo -e "${COLOR_PURPLE}============================================================${NC}"
 
 PANEL_PATH="/var/www/pterodactyl"
 cd $PANEL_PATH
 
-# [Langkah 1: Fix Backend Transformer - Full Data Bridge]
+# [Langkah 1: Backend Transformer - The Ultimate Bridge]
 echo -e "${COLOR_BLUE}[1/8] Membangun Backend Data Bridge (ServerTransformer)...${NC}"
 cat << 'EOF' > app/Transformers/Api/Client/ServerTransformer.php
 <?php
 namespace Pterodactyl\Transformers\Api\Client;
 
 use Pterodactyl\Models\Server;
-use Pterodactyl\Transformers\Api\Client\AllocationTransformer;
+use Pterodactyl\Models\Allocation;
 
 class ServerTransformer extends BaseClientTransformer
 {
@@ -87,7 +86,7 @@ class ServerTransformer extends BaseClientTransformer
 }
 EOF
 
-# [Langkah 2: Fix TypeScript Core - SOLUSI FINAL ERROR TS2339]
+# [Langkah 2: TypeScript Core - The Universal Mapper]
 echo -e "${COLOR_BLUE}[2/8] Rekonstruksi Core API Mapper (getServer.ts)...${NC}"
 cat << 'EOF' > resources/scripts/api/server/getServer.ts
 import http from '@/api/http';
@@ -136,87 +135,87 @@ export default (uuid: string): Promise<[Server, string[]]> => {
 };
 EOF
 
-# [Langkah 3: Dashboard UI Hyper-Modern (OP Aesthetics)]
-echo -e "${COLOR_BLUE}[3/8] Menyuntikkan UI Dashboard OP (Glassmorphism X)...${NC}"
+# [Langkah 3: UI Dashboard Hyper-Modern (The OP Theme)]
+echo -e "${COLOR_BLUE}[3/8] Menyuntikkan UI Dashboard Premium (V14 Edition)...${NC}"
 mkdir -p resources/scripts/components/dashboard
 cat << 'EOF' > resources/scripts/components/dashboard/ServerRow.tsx
 import React from 'react';
 import { Server } from '@/api/server/getServer';
 import { NavLink } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Server as ServerIcon, Clock, Cpu, HardDrive, Globe, Zap, Shield } from 'react-feather';
+import { Server as ServerIcon, Clock, Cpu, HardDrive, Globe, Zap, Activity } from 'react-feather';
 import styled, { keyframes } from 'styled-components';
 
 const glow = keyframes`
-  0% { box-shadow: 0 0 5px rgba(6, 182, 212, 0.2); }
-  50% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.6); }
-  100% { box-shadow: 0 0 5px rgba(6, 182, 212, 0.2); }
+  0% { box-shadow: 0 0 10px rgba(6, 182, 212, 0.1); }
+  50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.4); }
+  100% { box-shadow: 0 0 10px rgba(6, 182, 212, 0.1); }
 `;
 
 const Card = styled(NavLink)`
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
     backdrop-filter: blur(30px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
     &:hover {
         border-color: #06b6d4;
-        transform: translateY(-10px) scale(1.02);
-        background: rgba(255, 255, 255, 0.08);
-        animation: ${glow} 2s infinite ease-in-out;
+        transform: translateY(-12px) scale(1.02);
+        background: rgba(255, 255, 255, 0.07);
+        animation: ${glow} 3s infinite ease-in-out;
     }
 `;
 
 export default ({ server }: { server: Server }) => {
     const mainIp = server.allocations.find(a => a.isDefault);
     return (
-        <Card to={`/server/${server.uuid}`} className="rounded-[2.5rem] p-8 flex flex-col h-full shadow-2xl relative group overflow-hidden">
-            <div className="absolute -right-10 -top-10 opacity-5 group-hover:opacity-10 transition-opacity">
-                <ServerIcon size={200} />
+        <Card to={`/server/${server.uuid}`} className="rounded-[2.8rem] p-8 flex flex-col h-full shadow-2xl relative group overflow-hidden">
+            <div className="absolute -right-12 -top-12 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700">
+                <ServerIcon size={240} />
             </div>
             
-            <div className="flex justify-between items-start mb-8 relative z-10">
+            <div className="flex justify-between items-start mb-10 relative z-10">
                 <div className="flex items-center">
-                    <div className="p-4 rounded-3xl bg-cyan-500/10 text-cyan-400 mr-5 shadow-inner">
-                        <ServerIcon size={28} />
+                    <div className="p-5 rounded-[1.5rem] bg-gradient-to-br from-cyan-500/20 to-blue-600/10 text-cyan-400 mr-6 shadow-inner border border-cyan-500/10">
+                        <ServerIcon size={32} />
                     </div>
                     <div>
-                        <h3 className="text-2xl font-black text-white tracking-tighter truncate w-40">{server.name}</h3>
-                        <div className="flex items-center text-[10px] text-cyan-500/50 font-bold tracking-[0.3em] uppercase mt-1">
-                            <Shield size={10} className="mr-1"/> {server.node}
+                        <h3 className="text-2xl font-black text-white tracking-tighter truncate w-44 leading-tight">{server.name}</h3>
+                        <div className="flex items-center text-[10px] text-cyan-500/40 font-black tracking-[0.3em] uppercase mt-2">
+                            <Activity size={10} className="mr-2"/> {server.node}
                         </div>
                     </div>
                 </div>
-                <div className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${server.isSuspended ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}`}>
-                    {server.isSuspended ? 'OFFLINE' : 'ONLINE'}
+                <div className={`px-5 py-2 rounded-2xl text-[10px] font-black tracking-widest uppercase shadow-lg ${server.isSuspended ? 'bg-red-500/20 text-red-500 border border-red-500/20' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'}`}>
+                    {server.isSuspended ? 'Suspended' : 'Active'}
                 </div>
             </div>
 
-            <div className="space-y-4 mb-10 relative z-10 flex-grow">
-                <div className="flex items-center text-[11px] text-gray-400 font-mono mb-6 bg-black/20 p-3 rounded-xl border border-white/5">
-                    <Globe size={14} className="mr-3 text-cyan-500" />
+            <div className="space-y-5 mb-12 relative z-10 flex-grow">
+                <div className="flex items-center text-[12px] text-gray-400 font-mono mb-8 bg-black/30 p-4 rounded-2xl border border-white/5 shadow-inner">
+                    <Globe size={16} className="mr-4 text-cyan-500" />
                     {mainIp ? `${mainIp.ip}:${mainIp.port}` : 'Allocating...'}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
-                        <span className="text-[9px] text-gray-500 uppercase font-black block mb-2"><Cpu size={12} className="inline mr-1"/> CPU</span>
-                        <span className="text-xl font-black text-white">{server.limits.cpu}%</span>
+                <div className="grid grid-cols-2 gap-5">
+                    <div className="bg-white/[0.03] rounded-3xl p-6 border border-white/[0.05] hover:bg-white/[0.06] transition-colors">
+                        <span className="text-[10px] text-gray-500 uppercase font-black block mb-3 tracking-widest">CPU Power</span>
+                        <span className="text-2xl font-black text-white">{server.limits.cpu}%</span>
                     </div>
-                    <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
-                        <span className="text-[9px] text-gray-500 uppercase font-black block mb-2"><HardDrive size={12} className="inline mr-1"/> RAM</span>
-                        <span className="text-xl font-black text-white">{server.limits.memory / 1024}GB</span>
+                    <div className="bg-white/[0.03] rounded-3xl p-6 border border-white/[0.05] hover:bg-white/[0.06] transition-colors">
+                        <span className="text-[10px] text-gray-500 uppercase font-black block mb-3 tracking-widest">Memory</span>
+                        <span className="text-2xl font-black text-white">{server.limits.memory / 1024}GB</span>
                     </div>
                 </div>
             </div>
 
-            <div className="pt-6 border-t border-white/10 flex justify-between items-center relative z-10">
+            <div className="pt-8 border-t border-white/10 flex justify-between items-center relative z-10">
                 <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Expiration</span>
-                    <span className="text-sm font-black text-cyan-500 mt-1 uppercase">
+                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em]">Expiration</span>
+                    <span className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mt-1 uppercase">
                         {server.expiredAt ? format(new Date(server.expiredAt), 'dd MMM yyyy') : 'LIFETIME'}
                     </span>
                 </div>
-                <div className="p-3 rounded-2xl bg-white/5 text-gray-400 group-hover:text-cyan-400 transition-colors">
-                    <Zap size={20} />
+                <div className="p-4 rounded-2xl bg-white/5 text-gray-500 group-hover:text-cyan-400 group-hover:bg-cyan-500/10 transition-all duration-300">
+                    <Zap size={22} />
                 </div>
             </div>
         </Card>
@@ -224,32 +223,42 @@ export default ({ server }: { server: Server }) => {
 };
 EOF
 
-# [Langkah 4-8: System Logic & Build]
-echo -e "${COLOR_BLUE}[4/8] Sinkronisasi Dependencies & Database...${NC}"
-sed -i '/"react-dom":/a \    "react-feather": "^2.0.9",' package.json
+# [Langkah 4: Global Stylesheet Fix]
+echo -e "${COLOR_BLUE}[4/8] Memperbaiki Global Stylesheet Export...${NC}"
 cat << 'EOF' > resources/scripts/assets/css/GlobalStylesheet.ts
 import { createGlobalStyle } from 'styled-components/macro';
 const GlobalStylesheet = createGlobalStyle`
-    body { background-color: #050505 !important; font-family: 'Inter', sans-serif !important; color: #eee; }
+    body { 
+        background-color: #050505 !important; 
+        font-family: 'Inter', sans-serif !important; 
+        color: #eee;
+        background-image: radial-gradient(circle at 50% 0%, #111 0%, #050505 100%) !important;
+    }
+    .loading-spinner { border-color: #06b6d4 !important; border-top-color: transparent !important; }
     ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-thumb { background: #111; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
 `;
 export default GlobalStylesheet;
 EOF
 
+# [Langkah 5: Fix Dependencies & Database]
+echo -e "${COLOR_BLUE}[5/8] Sinkronisasi Library & Database...${NC}"
+sed -i '/"react-dom":/a \    "react-feather": "^2.0.9",' package.json
 php artisan migrate --force
 php artisan view:clear
 php artisan config:clear
 
-echo -e "${COLOR_BLUE}[5/8] Membangun Frontend (Yarn Build - Legacy OpenSSL)...${NC}"
+# [Langkah 6: Build Process (LEGACY OPENSSL FIX)]
+echo -e "${COLOR_BLUE}[6/8] Membangun Frontend (Yarn Build Production)...${NC}"
 export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
 yarn install
 yarn build:production
 
-echo -e "${COLOR_BLUE}[6/8] Finalizing Permissions...${NC}"
+# [Langkah 7: Finalisasi Permissions]
+echo -e "${COLOR_BLUE}[7/8] Finalizing Permissions...${NC}"
 chown -R www-data:www-data $PANEL_PATH/*
 
 echo -e "${COLOR_GREEN}============================================================${NC}"
-echo -e "${COLOR_GREEN}      V13 ULTIMATUM BERHASIL! SEMUA ERROR TELAH LENYAP.    ${NC}"
-echo -e "${COLOR_GREEN}      DOGLE STORE: PANEL ADALAH VERSI PALING OP.            ${NC}"
+echo -e "${COLOR_GREEN}      V14 OMEGA ARCHITECT BERHASIL! SEMUA ERROR FIXED.      ${NC}"
+echo -e "${COLOR_GREEN}      DOGLE STORE: PANEL IS NOW HYPER-POWERFUL & MODERN.    ${NC}"
 echo -e "${COLOR_GREEN}============================================================${NC}"

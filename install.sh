@@ -184,11 +184,6 @@ echo -e "${COLOR_PURPLE}Ready for UI/Theme injection (Part 2).${NC}"
 echo -e "${COLOR_PURPLE}Please type 'CONTINUE' to receive the React and CSS files.${NC}"
 echo -e "${COLOR_GREEN}------------------------------------------------------------${NC}"
 
-#!/bin/bash
-
-# Part 2: Frontend UI & React Core Injection
-# Targeted Version: v1.11.x
-# Aesthetic: Neon-Glass / Cyber-Modern
 
 set -e
 PANEL_PATH="/var/www/pterodactyl"

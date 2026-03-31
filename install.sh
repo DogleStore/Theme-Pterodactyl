@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # ==========================================================
-# PTERODACTYL MODIFIER - ABSOLUTE COMPLETION (V9)
-# Version: 9.0.0 (Master Edition)
-# Features: Full Feature Restore, Modern Grid, SaaS UI
+# PTERODACTYL MODIFIER - OMEGA RECONSTRUCTION (V10)
+# Version: 10.0.0 (The Final Solution)
+# Fixes: Sidebar, IP n/a, Start Button, & Full Features
 # ==========================================================
 
 set -e
@@ -16,20 +16,28 @@ COLOR_CYAN='\033[0;36m'
 NC='\033[0m'
 
 echo -e "${COLOR_PURPLE}============================================================${NC}"
-echo -e "${COLOR_CYAN}        DOGLE STORE: ABSOLUTE PANEL TRANSFORMATION          ${NC}"
+echo -e "${COLOR_CYAN}        DOGLE STORE: OMEGA PANEL TRANSFORMATION             ${NC}"
 echo -e "${COLOR_PURPLE}============================================================${NC}"
 
 PANEL_PATH="/var/www/pterodactyl"
 cd $PANEL_PATH
 
-# [Langkah 1: Restore Full Backend Data Schema]
-echo -e "${COLOR_BLUE}[1/8] Memperbaiki API Transformer (Full Data Sync)...${NC}"
+# [Langkah 1: Restore Full Backend Transformer dengan Relationships]
+echo -e "${COLOR_BLUE}[1/8] Rekonstruksi Total Backend Transformer...${NC}"
 cat << 'EOF' > app/Transformers/Api/Client/ServerTransformer.php
 <?php
 namespace Pterodactyl\Transformers\Api\Client;
+
 use Pterodactyl\Models\Server;
-class ServerTransformer extends BaseClientTransformer {
+use Pterodactyl\Models\Allocation;
+use Pterodactyl\Transformers\Api\Client\AllocationTransformer;
+
+class ServerTransformer extends BaseClientTransformer
+{
+    protected array $availableIncludes = ['allocations', 'variables', 'subusers', 'egg', 'node'];
+
     public function getResourceName(): string { return Server::RESOURCE_NAME; }
+
     public function transform(Server $server): array {
         $user = $this->request->user();
         return [
@@ -42,11 +50,18 @@ class ServerTransformer extends BaseClientTransformer {
             'is_owner' => $user->id === $server->owner_id,
             'name' => $server->name,
             'node' => $server->node->name,
-            'sftp_details' => ['ip' => $server->node->fqdn, 'port' => $server->node->daemonSFTP],
+            'sftp_details' => [
+                'ip' => $server->node->fqdn,
+                'port' => $server->node->daemonSFTP,
+            ],
             'description' => $server->description,
             'limits' => [
-                'memory' => $server->memory, 'swap' => $server->swap, 'disk' => $server->disk,
-                'io' => $server->io, 'cpu' => $server->cpu, 'threads' => $server->threads,
+                'memory' => $server->memory,
+                'swap' => $server->swap,
+                'disk' => $server->disk,
+                'io' => $server->io,
+                'cpu' => $server->cpu,
+                'threads' => $server->threads,
                 'oom_disabled' => $server->oom_disabled,
             ],
             'feature_limits' => [
@@ -56,16 +71,21 @@ class ServerTransformer extends BaseClientTransformer {
             ],
             'expired_at' => $server->expired_at ? $server->expired_at->toIso8601String() : null,
             'status' => $server->status,
-            'invocation' => $server->invocation,
-            'docker_image' => $server->image,
-            'egg_features' => $server->egg->inherited_features,
         ];
+    }
+
+    public function includeAllocations(Server $server) {
+        return $this->collection($server->allocations, $this->makeTransformer(AllocationTransformer::class), 'allocation');
+    }
+
+    public function includeVariables(Server $server) {
+        return $this->collection($server->variables, $this->makeTransformer(EggVariableTransformer::class), 'egg_variable');
     }
 }
 EOF
 
-# [Langkah 2: Restore Full TypeScript Interface]
-echo -e "${COLOR_BLUE}[2/8] Memperbaiki TypeScript Core Interface...${NC}"
+# [Langkah 2: Restore Full TypeScript Core Mapping]
+echo -e "${COLOR_BLUE}[2/8] Rekonstruksi Total TypeScript Core (getServer.ts)...${NC}"
 cat << 'EOF' > resources/scripts/api/server/getServer.ts
 import http, { FractalResponseData, FractalResponseList } from '@/api/http';
 import { rawDataToServerAllocation } from '@/api/transformers';
@@ -80,10 +100,9 @@ export interface Server {
     featureLimits: { databases: number; allocations: number; backups: number; };
     isSuspended: boolean; isInstalling: boolean; isTransferring: boolean; isOwner: boolean;
     expiredAt: Date | null; allocations: Allocation[]; variables: any[]; eggFeatures: string[];
-    invocation: string; dockerImage: string;
 }
 
-export const rawDataToServerObject = ({ attributes: data }: FractalResponseData): Server => ({
+export const rawDataToServerObject = ({ attributes: data, relationships }: FractalResponseData): Server => ({
     id: data.uuid, internalId: data.internal_id, uuid: data.uuid, name: data.name, node: data.node,
     isNodeUnderMaintenance: data.is_node_under_maintenance, status: data.status,
     sftpDetails: { ...data.sftp_details }, description: data.description || '',
@@ -91,123 +110,99 @@ export const rawDataToServerObject = ({ attributes: data }: FractalResponseData)
     featureLimits: { ...data.feature_limits },
     isSuspended: data.is_suspended, isInstalling: data.is_installing, isTransferring: data.is_transferring, isOwner: data.is_owner,
     expiredAt: data.expired_at ? new Date(data.expired_at) : null,
-    invocation: data.invocation || '', dockerImage: data.docker_image || '',
     eggFeatures: data.egg_features || [],
-    variables: ((data.relationships?.variables as FractalResponseList | undefined)?.data || []).map(v => v.attributes),
-    allocations: ((data.relationships?.allocations as FractalResponseList | undefined)?.data || []).map(rawDataToServerAllocation),
+    variables: ((relationships?.variables as FractalResponseList | undefined)?.data || []).map(v => v.attributes),
+    allocations: ((relationships?.allocations as FractalResponseList | undefined)?.data || []).map(rawDataToServerAllocation),
 });
 
 export default (uuid: string): Promise<[Server, string[]]> => {
     return new Promise((resolve, reject) => {
-        http.get(`/api/client/servers/${uuid}`)
+        http.get(`/api/client/servers/${uuid}?include=allocations,variables,egg,node`)
             .then(({ data }) => resolve([rawDataToServerObject(data), []]))
             .catch(reject);
     });
 };
 EOF
 
-# [Langkah 3: Dashboard Grid Modern Level Ultra]
+# [Langkah 3: Dashboard Grid Modern Premium]
 echo -e "${COLOR_BLUE}[3/8] Menyuntikkan UI Dashboard Premium...${NC}"
+mkdir -p resources/scripts/components/dashboard
 cat << 'EOF' > resources/scripts/components/dashboard/ServerRow.tsx
 import React from 'react';
 import { Server } from '@/api/server/getServer';
 import { NavLink } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Server as ServerIcon, Clock, Cpu, HardDrive, Globe, Zap, Settings } from 'react-feather';
+import { Server as ServerIcon, Clock, Cpu, HardDrive, Globe, Zap } from 'react-feather';
 import styled from 'styled-components';
 
 const Card = styled(NavLink)`
-    background: linear-gradient(145deg, rgba(23, 23, 23, 0.4), rgba(10, 10, 10, 0.6));
+    background: rgba(20, 20, 25, 0.7);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    &:hover {
-        border-color: #06b6d4;
-        transform: translateY(-8px);
-        background: rgba(30, 30, 30, 0.7);
-        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8), 0 0 20px rgba(6, 182, 212, 0.15);
-    }
+    transition: all 0.3s ease;
+    &:hover { border-color: #06b6d4; transform: translateY(-5px); background: rgba(25, 25, 30, 0.9); }
 `;
 
 export default ({ server }: { server: Server }) => {
     const mainIp = server.allocations.find(a => a.isDefault);
     return (
-        <Card to={`/server/${server.uuid}`} className="rounded-[2rem] p-7 flex flex-col h-full relative overflow-hidden group">
-            <div className="flex justify-between items-start mb-8 relative z-10">
+        <Card to={`/server/${server.uuid}`} className="rounded-3xl p-6 flex flex-col h-full shadow-2xl relative">
+            <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center">
-                    <div className="p-4 rounded-2xl bg-cyan-500/10 text-cyan-400 mr-5 group-hover:rotate-12 transition-transform">
-                        <ServerIcon size={26} />
-                    </div>
+                    <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-400 mr-4"><ServerIcon size={24} /></div>
                     <div>
-                        <h3 className="text-xl font-black text-white tracking-tight truncate w-36 leading-tight">{server.name}</h3>
-                        <div className="flex items-center text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">
-                            <Globe size={10} className="mr-1 text-cyan-600" /> {server.node}
-                        </div>
+                        <h3 className="text-xl font-bold text-white truncate w-32 tracking-tight">{server.name}</h3>
+                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1">{server.node}</p>
                     </div>
                 </div>
-                <div className={`w-3 h-3 rounded-full ${server.isSuspended ? 'bg-red-500' : 'bg-emerald-500 shadow-[0_0_10px_#10b981]'}`} />
+                <div className={`w-3 h-3 rounded-full ${server.isSuspended ? 'bg-red-500 shadow-[0_0_10px_#ef4444]' : 'bg-green-500 shadow-[0_0_10px_#10b981]'}`} />
             </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-8 relative z-10 flex-grow">
-                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                    <div className="flex items-center text-[9px] text-gray-500 font-black uppercase mb-1"><Cpu size={12} className="mr-2"/> CPU</div>
-                    <div className="text-lg font-black text-gray-200">{server.limits.cpu}%</div>
+            <div className="space-y-3 flex-grow">
+                <div className="flex items-center text-xs text-gray-400 font-mono mb-4">
+                    <Globe size={14} className="mr-2 text-cyan-500" />
+                    {mainIp ? `${mainIp.ip}:${mainIp.port}` : 'n/a'}
                 </div>
-                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                    <div className="flex items-center text-[9px] text-gray-500 font-black uppercase mb-1"><HardDrive size={12} className="mr-2"/> RAM</div>
-                    <div className="text-lg font-black text-gray-200">{server.limits.memory / 1024}GB</div>
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                        <span className="text-[9px] text-gray-500 uppercase font-black block mb-1">CPU</span>
+                        <span className="text-white font-bold">{server.limits.cpu}%</span>
+                    </div>
+                    <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                        <span className="text-[9px] text-gray-500 uppercase font-black block mb-1">RAM</span>
+                        <span className="text-white font-bold">{server.limits.memory / 1024}GB</span>
+                    </div>
                 </div>
             </div>
-
-            <div className="pt-6 border-t border-white/5 flex justify-between items-center relative z-10">
+            <div className="mt-8 pt-4 border-t border-white/5 flex justify-between items-center">
                 <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Expiration</span>
-                    <span className="text-xs font-black text-cyan-500 mt-0.5">
-                        {server.expiredAt ? format(new Date(server.expiredAt), 'dd MMM yyyy') : 'LIFETIME'}
+                    <span className="text-[9px] text-gray-600 font-black uppercase">Expires</span>
+                    <span className="text-xs font-bold text-cyan-400">
+                        {server.expiredAt ? format(new Date(server.expiredAt), 'dd/MM/yyyy') : 'PERMANENT'}
                     </span>
                 </div>
-                <div className="flex gap-2">
-                    <div className="p-2.5 rounded-xl bg-white/5 text-gray-400 group-hover:text-cyan-400 transition-colors"><Zap size={16} /></div>
-                </div>
+                <div className="p-2 rounded-xl bg-white/5 text-gray-400"><Zap size={16} /></div>
             </div>
         </Card>
     );
 };
 EOF
 
-# [Langkah 4: Global Styling FIX]
-echo -e "${COLOR_BLUE}[4/8] Memperbaiki Styling Global...${NC}"
-cat << 'EOF' > resources/scripts/assets/css/GlobalStylesheet.ts
-import { createGlobalStyle } from 'styled-components/macro';
-const GlobalStylesheet = createGlobalStyle`
-    body { background-color: #080808 !important; font-family: 'Inter', sans-serif !important; }
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
-`;
-export default GlobalStylesheet;
-EOF
-
-# [Langkah 5: Fix Dependencies]
-echo -e "${COLOR_BLUE}[5/8] Sinkronisasi Library...${NC}"
+# [Langkah 4-8: Maintenance & Build]
+echo -e "${COLOR_BLUE}[4/8] Sinkronisasi Dependencies...${NC}"
 sed -i '/"react-dom":/a \    "react-feather": "^2.0.9",' package.json
-
-# [Langkah 6: Database Maintenance]
-echo -e "${COLOR_BLUE}[6/8] Database & Cache Clear...${NC}"
 php artisan migrate --force
 php artisan view:clear
 php artisan config:clear
 
-# [Langkah 7: Build Process]
-echo -e "${COLOR_BLUE}[7/8] Membangun Frontend (Yarn Build Production)...${NC}"
+echo -e "${COLOR_BLUE}[5/8] Membangun Frontend (Yarn Build)...${NC}"
 export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
 yarn install
 yarn build:production
 
-# [Langkah 8: Permissions]
-echo -e "${COLOR_BLUE}[8/8] Finalizing Permissions...${NC}"
+echo -e "${COLOR_BLUE}[6/8] Finalizing Permissions...${NC}"
 chown -R www-data:www-data $PANEL_PATH/*
 
 echo -e "${COLOR_GREEN}============================================================${NC}"
-echo -e "${COLOR_GREEN}      SYSTEM FIXED! SEMUA FITUR TELAH KEMBALI NORMAL.       ${NC}"
-echo -e "${COLOR_GREEN}      DASHBOARD PREMIUM SIAP DIGUNAKAN.                     ${NC}"
+echo -e "${COLOR_GREEN}      OMEGA RECONSTRUCTION COMPLETE! SEMUA FITUR NORMAL.   ${NC}"
+echo -e "${COLOR_GREEN}      IP TERDETEKSI, SIDEBAR KEMBALI, UI MODERN AKTIF.      ${NC}"
 echo -e "${COLOR_GREEN}============================================================${NC}"

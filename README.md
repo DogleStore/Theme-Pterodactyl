@@ -10,4 +10,4 @@ Custom modification for Pterodactyl Panel v1.11.x.
 Jalankan perintah ini sebagai root di folder Pterodactyl Anda:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/jackdogle/Theme-Pterodactyl/main/install.sh | bash
+bash <(curl -s https://raw.githubusercontent.com/jackdogle/Theme-Pterodactyl/main/install.sh)

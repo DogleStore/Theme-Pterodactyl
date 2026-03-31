@@ -1,13 +1,11 @@
 #!/bin/bash
 
 # ==========================================================
-# PTERODACTYL ULTIMATE MODIFIER - DOGLE STORE EXCLUSIVE
-# Version: 2.0.0 (Production Ready)
-# Optimized for: Ubuntu/Debian & Pterodactyl 1.11.x
+# PTERODACTYL ULTIMATE MODIFIER - AUTO-REPAIR VERSION
+# Version: 2.1.0 (Fix: Missing Yarn & Node)
 # ==========================================================
 
-# Jangan berhenti jika ada error ringan, tapi catat lognya
-set -u
+set -e # Berhenti jika ada error fatal
 
 COLOR_BLUE='\033[0;34m'
 COLOR_GREEN='\033[0;32m'
@@ -20,36 +18,33 @@ echo -e "${COLOR_PURPLE}========================================================
 echo -e "${COLOR_BLUE}        PTERODACTYL MODERN UI & EXPIRED SYSTEM            ${NC}"
 echo -e "${COLOR_PURPLE}============================================================${NC}"
 
-# [Langkah 1: Validasi Lingkungan]
 PANEL_PATH="/var/www/pterodactyl"
-
-if [ "$EUID" -ne 0 ]; then 
-  echo -e "${COLOR_RED}[ERROR] Harap jalankan script sebagai ROOT (sudo bash)${NC}"
-  exit 1
-fi
-
-if [ ! -d "$PANEL_PATH" ]; then
-    echo -e "${COLOR_RED}[ERROR] Panel tidak ditemukan di $PANEL_PATH${NC}"
-    exit 1
-fi
-
 cd $PANEL_PATH
 
-# [Langkah 2: Backup Cepat (Optimized)]
-echo -e "${COLOR_YELLOW}[1/6] Menjalankan Backup Kilat (Excluding heavy folders)...${NC}"
-# Kita lewati node_modules dan vendor karena itu bisa di-install ulang dan sangat berat untuk di-tar
-TIMESTAMP=$(date +%s)
-tar -czf "quick_backup_$TIMESTAMP.tar.gz" \
-    --exclude='node_modules' \
-    --exclude='vendor' \
-    --exclude='.git' \
-    --exclude='storage' \
-    app/ resources/ database/ package.json tailwind.config.js 2>/dev/null
+# [Langkah 1: Cek & Instal NodeJS / Yarn]
+echo -e "${COLOR_YELLOW}[1/7] Memeriksa Dependencies (NodeJS & Yarn)...${NC}"
 
-echo -e "${COLOR_GREEN}[SUCCESS] Backup selesai: quick_backup_$TIMESTAMP.tar.gz${NC}"
+# Cek Node.js
+if ! [ -x "$(command -v node)" ]; then
+  echo -e "${COLOR_RED}[!] Node.js tidak ditemukan. Menginstal Node.js 18...${NC}"
+  curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+  apt-get install -y nodejs
+fi
+
+# Cek Yarn
+if ! [ -x "$(command -v yarn)" ]; then
+  echo -e "${COLOR_YELLOW}[!] Yarn tidak ditemukan. Menginstal Yarn secara global...${NC}"
+  npm install --global yarn
+fi
+
+echo -e "${COLOR_GREEN}[SUCCESS] Node.js & Yarn siap digunakan.${NC}"
+
+# [Langkah 2: Backup Cepat]
+echo -e "${COLOR_YELLOW}[2/7] Menjalankan Backup...${NC}"
+tar -czf "backup_$(date +%s).tar.gz" --exclude='node_modules' --exclude='vendor' app/ resources/ database/ package.json tailwind.config.js 2>/dev/null
 
 # [Langkah 3: Suntik Database & Backend]
-echo -e "${COLOR_YELLOW}[2/6] Menyuntikkan Skema Database & Logic...${NC}"
+echo -e "${COLOR_YELLOW}[3/7] Menyuntikkan Skema Database & Logic...${NC}"
 
 # Migration
 cat << 'EOF' > database/migrations/2023_10_27_000000_add_expired_at_to_servers_table.php
@@ -100,13 +95,8 @@ class CheckServerExpirationCommand extends Command {
 }
 EOF
 
-# Update Server Model (Hanya jika belum ada)
-if ! grep -q "expired_at" app/Models/Server.php; then
-    sed -i "/'suspended',/a \ \ \ \ \ \ \ 'expired_at'," app/Models/Server.php
-fi
-
 # [Langkah 4: Suntik Modern UI Components]
-echo -e "${COLOR_YELLOW}[3/6] Menyuntikkan Glassmorphism UI (React)...${NC}"
+echo -e "${COLOR_YELLOW}[4/7] Menyuntikkan UI Dashboard Baru...${NC}"
 
 # ServerRow Component
 mkdir -p resources/scripts/components/dashboard
@@ -139,19 +129,13 @@ export default ({ server }: { server: Server }) => {
                 </div>
                 <div className={`w-3 h-3 rounded-full ${server.isSuspended ? 'bg-red-500' : 'bg-green-500'} shadow-lg`} />
             </div>
-            <div className="space-y-3 flex-grow">
-                <div className="flex justify-between text-sm text-gray-400 font-medium">
-                    <span className="flex items-center"><Cpu size={14} className="mr-2"/> CPU</span>
-                    <span className="text-gray-200">{server.limits.cpu}%</span>
-                </div>
-                <div className="flex justify-between text-sm text-gray-400 font-medium">
-                    <span className="flex items-center"><HardDrive size={14} className="mr-2"/> RAM</span>
-                    <span className="text-gray-200">{server.limits.memory / 1024}GB</span>
-                </div>
+            <div className="space-y-3 flex-grow text-gray-400">
+                <p className="flex justify-between font-medium"><span>CPU</span><span className="text-white">{server.limits.cpu}%</span></p>
+                <p className="flex justify-between font-medium"><span>RAM</span><span className="text-white">{server.limits.memory / 1024}GB</span></p>
             </div>
-            <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center">
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Expiration Date</span>
-                <span className="text-xs font-bold text-cyan-500 bg-cyan-500/10 px-3 py-1 rounded-full">
+            <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center text-xs">
+                <span className="font-black text-gray-500 uppercase tracking-widest">Expires</span>
+                <span className="font-bold text-cyan-500 bg-cyan-500/10 px-3 py-1 rounded-full uppercase">
                     {server.expired_at ? format(new Date(server.expired_at), 'MMM dd, yyyy') : 'PERMANENT'}
                 </span>
             </div>
@@ -161,28 +145,24 @@ export default ({ server }: { server: Server }) => {
 EOF
 
 # [Langkah 5: Database & Cache Maintenance]
-echo -e "${COLOR_YELLOW}[4/6] Menjalankan Migrasi & Clear Cache...${NC}"
+echo -e "${COLOR_YELLOW}[5/7] Sinkronisasi Database...${NC}"
 php artisan migrate --force
 php artisan view:clear
 php artisan config:clear
 
-# Register Cron
-if ! grep -q "p:server:expiration" app/Console/Kernel.php; then
-    sed -i "/schedule->command('p:backups:purge')->everyFiveMinutes();/a \ \ \ \ \ \ \ \$schedule->command('p:server:expiration')->everyMinute();" app/Console/Kernel.php
-fi
-
-# [Langkah 6: Build Process (Heavy)]
-echo -e "${COLOR_YELLOW}[5/6] Membangun UI (Yarn Build Production)...${NC}"
-echo -e "${COLOR_YELLOW}Mohon tunggu, proses ini memakan waktu 2-5 menit...${NC}"
+# [Langkah 6: Build Process (UTAMA)]
+echo -e "${COLOR_YELLOW}[6/7] Membangun Aset Frontend (Yarn Build)...${NC}"
+echo -e "${COLOR_YELLOW}Proses ini memakan waktu 2-5 menit, mohon jangan tutup terminal...${NC}"
 
 export NODE_OPTIONS=--max_old_space_size=4096
-yarn install --production=false --frozen-lockfile || yarn install
+yarn install
 yarn build:production
 
-# [Selesai]
-echo -e "${COLOR_YELLOW}[6/6] Mengatur Ulang Hak Akses (Permissions)...${NC}"
+# [Langkah 7: Permissions]
+echo -e "${COLOR_YELLOW}[7/7] Finalizing Permissions...${NC}"
 chown -R www-data:www-data $PANEL_PATH/*
 
 echo -e "${COLOR_GREEN}============================================================${NC}"
 echo -e "${COLOR_GREEN}      MODIFIKASI BERHASIL DIINSTAL! - DOGLE STORE           ${NC}"
+echo -e "${COLOR_GREEN}      SILAHKAN REFRESH PANEL ANDA (CTRL+F5)                 ${NC}"
 echo -e "${COLOR_GREEN}============================================================${NC}"

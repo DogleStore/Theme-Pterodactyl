@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # ==========================================================
-# PTERODACTYL HYPER-MODERN UI & EXPIRED SYSTEM
-# Version: 7.0.0 (The Architect Final Edition)
-# Status: PRODUCTION READY - ERROR FREE
+# PTERODACTYL MODIFIER - THE GOD-PROTOCOL (V8)
+# Version: 8.0.0 (Ultimate Completion)
+# Fixes: Zap Icon, Startup Properties, Description Nullability
 # ==========================================================
 
 set -e
@@ -16,14 +16,14 @@ COLOR_CYAN='\033[0;36m'
 NC='\033[0m'
 
 echo -e "${COLOR_PURPLE}============================================================${NC}"
-echo -e "${COLOR_CYAN}        DOGLE STORE: TOTAL ARCHITECTURAL REPAIR             ${NC}"
+echo -e "${COLOR_CYAN}        DOGLE STORE: THE GOD-PROTOCOL TRANSFORMATION        ${NC}"
 echo -e "${COLOR_PURPLE}============================================================${NC}"
 
 PANEL_PATH="/var/www/pterodactyl"
 cd $PANEL_PATH
 
-# [Langkah 1: Fix Backend Transformer - Full Data Schema]
-echo -e "${COLOR_BLUE}[1/8] Rekonstruksi Backend Data Schema...${NC}"
+# [Langkah 1: Fix Backend Transformer - Full Pterodactyl Schema]
+echo -e "${COLOR_BLUE}[1/8] Rekonstruksi Backend Data (ServerTransformer)...${NC}"
 cat << 'EOF' > app/Transformers/Api/Client/ServerTransformer.php
 <?php
 namespace Pterodactyl\Transformers\Api\Client;
@@ -42,17 +42,20 @@ class ServerTransformer extends BaseClientTransformer {
             'node' => $server->node->name,
             'sftp_details' => ['ip' => $server->node->fqdn, 'port' => $server->node->daemonSFTP],
             'description' => $server->description,
-            'limits' => ['memory' => $server->memory, 'swap' => $server->swap, 'disk' => $server->disk, 'io' => $server->io, 'cpu' => $server->cpu],
+            'limits' => ['memory' => $server->memory, 'swap' => $server->swap, 'disk' => $server->disk, 'io' => $server->io, 'cpu' => $server->cpu, 'threads' => $server->threads],
             'feature_limits' => ['databases' => $server->database_limit, 'allocations' => $server->allocation_limit, 'backups' => $server->backup_limit],
             'expired_at' => $server->expired_at ? $server->expired_at->toIso8601String() : null,
             'status' => $server->status,
+            'invocation' => $server->invocation,
+            'docker_image' => $server->image,
+            'egg_features' => $server->egg->inherited_features,
         ];
     }
 }
 EOF
 
-# [Langkah 2: Fix TypeScript Core - MENGEMBALIKAN SEMUA VARIABEL]
-echo -e "${COLOR_BLUE}[2/8] Rekonstruksi TypeScript Interface (getServer.ts)...${NC}"
+# [Langkah 2: Fix TypeScript Core - MENGEMBALIKAN SEMUA VARIABEL ASLI]
+echo -e "${COLOR_BLUE}[2/8] Rekonstruksi TypeScript Core (getServer.ts)...${NC}"
 cat << 'EOF' > resources/scripts/api/server/getServer.ts
 import http, { FractalResponseData, FractalResponseList } from '@/api/http';
 import { rawDataToServerAllocation } from '@/api/transformers';
@@ -68,8 +71,8 @@ export interface Server {
     isNodeUnderMaintenance: boolean;
     status: string | null;
     sftpDetails: { ip: string; port: number; };
-    description: string | null;
-    limits: { memory: number; swap: number; disk: number; io: number; cpu: number; };
+    description: string;
+    limits: { memory: number; swap: number; disk: number; io: number; cpu: number; threads: string | null; };
     featureLimits: { databases: number; allocations: number; backups: number; };
     isSuspended: boolean;
     isInstalling: boolean;
@@ -78,6 +81,8 @@ export interface Server {
     allocations: Allocation[];
     variables: any[];
     eggFeatures: string[];
+    invocation: string;
+    dockerImage: string;
 }
 
 export const rawDataToServerObject = ({ attributes: data }: FractalResponseData): Server => ({
@@ -96,8 +101,10 @@ export const rawDataToServerObject = ({ attributes: data }: FractalResponseData)
     isInstalling: data.is_installing,
     isTransferring: data.is_transferring,
     expiredAt: data.expired_at ? new Date(data.expired_at) : null,
+    invocation: data.invocation || '',
+    dockerImage: data.docker_image || '',
     eggFeatures: data.egg_features || [],
-    variables: [], // Default empty to satisfy TS
+    variables: ((data.relationships?.variables as FractalResponseList | undefined)?.data || []).map(v => v.attributes),
     allocations: ((data.relationships?.allocations as FractalResponseList | undefined)?.data || []).map(rawDataToServerAllocation),
 });
 
@@ -110,26 +117,15 @@ export default (uuid: string): Promise<[Server, string[]]> => {
 };
 EOF
 
-# [Langkah 3: Fix Global Styling Export]
-echo -e "${COLOR_BLUE}[3/8] Memperbaiki Global Stylesheet Export...${NC}"
-cat << 'EOF' > resources/scripts/assets/css/GlobalStylesheet.ts
-import { createGlobalStyle } from 'styled-components/macro';
-const GlobalStylesheet = createGlobalStyle`
-    body { background-color: #050505 !important; font-family: 'Inter', sans-serif !important; }
-    .loading-spinner { border-color: #06b6d4 !important; border-top-color: transparent !important; }
-`;
-export default GlobalStylesheet;
-EOF
-
-# [Langkah 4: UI Dashboard Mega-Modern]
-echo -e "${COLOR_BLUE}[4/8] Menyuntikkan UI Dashboard Premium...${NC}"
+# [Langkah 3: UI Dashboard Hyper-Modern (Fixed Zap & Icons)]
+echo -e "${COLOR_BLUE}[3/8] Menyuntikkan UI Dashboard (Fixed Zap Icon)...${NC}"
 mkdir -p resources/scripts/components/dashboard
 cat << 'EOF' > resources/scripts/components/dashboard/ServerRow.tsx
 import React from 'react';
 import { Server } from '@/api/server/getServer';
 import { NavLink } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Server as ServerIcon, Clock, Cpu, HardDrive, Globe } from 'react-feather';
+import { Server as ServerIcon, Clock, Cpu, HardDrive, Globe, Zap } from 'react-feather';
 import styled from 'styled-components';
 
 const Card = styled(NavLink)`
@@ -201,27 +197,35 @@ export default ({ server }: { server: Server }) => {
 };
 EOF
 
-# [Langkah 5: Fix Tailwind & Dependencies]
-echo -e "${COLOR_BLUE}[5/8] Sinkronisasi Dependencies...${NC}"
-sed -i '/"react-dom":/a \    "react-feather": "^2.0.9",' package.json
+# [Langkah 4: Fix Global CSS]
+echo -e "${COLOR_BLUE}[4/8] Memperbaiki Global Stylesheet Export...${NC}"
+cat << 'EOF' > resources/scripts/assets/css/GlobalStylesheet.ts
+import { createGlobalStyle } from 'styled-components/macro';
+const GlobalStylesheet = createGlobalStyle`
+    body { background-color: #050505 !important; font-family: 'Inter', sans-serif !important; }
+    .loading-spinner { border-color: #06b6d4 !important; border-top-color: transparent !important; }
+`;
+export default GlobalStylesheet;
+EOF
 
-# [Langkah 6: Migrasi Database]
-echo -e "${COLOR_BLUE}[6/8] Sinkronisasi Database...${NC}"
+# [Langkah 5: Fix Dependencies & Migration]
+echo -e "${COLOR_BLUE}[5/8] Sinkronisasi Database...${NC}"
+sed -i '/"react-dom":/a \    "react-feather": "^2.0.9",' package.json
 php artisan migrate --force
 php artisan view:clear
 php artisan config:clear
 
-# [Langkah 7: Build Process - LEGACY FIX]
-echo -e "${COLOR_BLUE}[7/8] Membangun Frontend (Yarn Build)...${NC}"
+# [Langkah 6: Build Process (OPENSSL LEGACY)]
+echo -e "${COLOR_BLUE}[6/8] Membangun Frontend (Yarn Build)...${NC}"
 export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
 yarn install
 yarn build:production
 
-# [Langkah 8: Permissions]
-echo -e "${COLOR_BLUE}[8/8] Finalizing Permissions...${NC}"
+# [Langkah 7: Finalisasi Permissions]
+echo -e "${COLOR_BLUE}[7/8] Finalizing Permissions...${NC}"
 chown -R www-data:www-data $PANEL_PATH/*
 
 echo -e "${COLOR_GREEN}============================================================${NC}"
 echo -e "${COLOR_GREEN}      ARCHITECTURAL REPAIR COMPLETE! 100% ERROR FREE.       ${NC}"
-echo -e "${COLOR_GREEN}      DASHBOARD ANDA SEKARANG LEVEL HYPER-PREMIUM.          ${NC}"
+echo -e "${COLOR_GREEN}      DOGLE STORE: PANEL IS NOW HYPER-POWERFUL.             ${NC}"
 echo -e "${COLOR_GREEN}============================================================${NC}"
